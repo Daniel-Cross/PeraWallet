@@ -5,7 +5,7 @@ export default {
   expo: {
     name: "Pera Wallet",
     slug: "pera-wallet",
-    version: "1.0.0",
+    version: pkgs.version,
     orientation: "portrait",
     owner: "daniel.cross",
     icon: "./assets/icon.png",
