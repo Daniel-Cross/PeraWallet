@@ -7,6 +7,7 @@ describe("useDebounce", () => {
   });
 
   afterEach(() => {
+    jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
 
@@ -16,9 +17,12 @@ describe("useDebounce", () => {
   });
 
   it("should debounce the value", () => {
-    const { result, rerender } = renderHook(({ value }) => useDebounce(value), {
-      initialProps: { value: "" },
-    });
+    const { result, rerender } = renderHook(
+      ({ value }: { value: string }) => useDebounce(value),
+      {
+        initialProps: { value: "" },
+      }
+    );
 
     expect(result.current).toBe("");
 
@@ -38,9 +42,12 @@ describe("useDebounce", () => {
   });
 
   it("should reset timer when value changes rapidly", () => {
-    const { result, rerender } = renderHook(({ value }) => useDebounce(value), {
-      initialProps: { value: "" },
-    });
+    const { result, rerender } = renderHook(
+      ({ value }: { value: string }) => useDebounce(value),
+      {
+        initialProps: { value: "" },
+      }
+    );
 
     rerender({ value: "t" });
     act(() => {
@@ -67,9 +74,12 @@ describe("useDebounce", () => {
   });
 
   it("should update to latest value after delay", () => {
-    const { result, rerender } = renderHook(({ value }) => useDebounce(value), {
-      initialProps: { value: "initial" },
-    });
+    const { result, rerender } = renderHook(
+      ({ value }: { value: string }) => useDebounce(value),
+      {
+        initialProps: { value: "initial" },
+      }
+    );
 
     act(() => {
       jest.advanceTimersByTime(500);

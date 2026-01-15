@@ -23,6 +23,10 @@ describe("SearchAndFilter", () => {
     });
   });
 
+  afterEach(() => {
+    jest.clearAllTimers();
+  });
+
   it("should render search input and filter button", () => {
     const { getByPlaceholderText } = render(<SearchAndFilter />);
 
