@@ -1,15 +1,21 @@
 import React from "react";
-import { render, waitFor } from "@testing-library/react-native";
+import { render, waitFor, fireEvent } from "@testing-library/react-native";
 import RepoListScreen from "../screens/RepoList/RepoListScreen";
 import { useGithubRepos } from "../hooks/useGithubRepos";
 import { useFilterStore } from "../store/filterStore";
 import { useRepositoryStore } from "../store/repositoryStore";
+import { useFavoritesStore } from "../store/favoritesStore";
 
 jest.mock("@expo/vector-icons/FontAwesome", () => "FontAwesome");
 
 jest.mock("../hooks/useGithubRepos");
 jest.mock("../store/filterStore");
 jest.mock("../store/repositoryStore");
+
+// Mock the favoritesStore before it's imported
+jest.mock("../store/favoritesStore", () => ({
+  useFavoritesStore: jest.fn(),
+}));
 
 jest.mock("@react-navigation/native", () => ({
   useNavigation: () => ({
@@ -83,6 +89,10 @@ describe("RepoListScreen", () => {
     (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
       selectedRepository: null,
       setSelectedRepository: jest.fn(),
+    });
+    (useFavoritesStore as unknown as jest.Mock).mockReturnValue({
+      isFavorite: jest.fn(() => false),
+      toggleFavorite: jest.fn(),
     });
   });
 
@@ -208,5 +218,40 @@ describe("RepoListScreen", () => {
       expect(getByText("angular")).toBeTruthy();
       expect(getByText("typescript")).toBeTruthy();
     });
+  });
+
+  it("should render favorite icon for each repository", () => {
+    (useGithubRepos as jest.Mock).mockReturnValue({
+      data: mockRepos,
+      isLoading: false,
+      error: null,
+    });
+
+    const { getByTestId } = render(<RepoListScreen />);
+
+    expect(getByTestId("favorite-icon-1")).toBeTruthy();
+    expect(getByTestId("favorite-icon-2")).toBeTruthy();
+    expect(getByTestId("favorite-icon-3")).toBeTruthy();
+  });
+
+  it("should toggle favorite when favorite icon is pressed", () => {
+    const mockToggleFavorite = jest.fn();
+    (useFavoritesStore as unknown as jest.Mock).mockReturnValue({
+      isFavorite: jest.fn(() => false),
+      toggleFavorite: mockToggleFavorite,
+    });
+
+    (useGithubRepos as jest.Mock).mockReturnValue({
+      data: mockRepos,
+      isLoading: false,
+      error: null,
+    });
+
+    const { getByTestId } = render(<RepoListScreen />);
+    const favoriteIcon = getByTestId("favorite-icon-1");
+
+    fireEvent.press(favoriteIcon);
+
+    expect(mockToggleFavorite).toHaveBeenCalledWith(1);
   });
 });

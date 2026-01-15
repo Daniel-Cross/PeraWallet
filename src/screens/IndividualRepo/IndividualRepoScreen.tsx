@@ -10,10 +10,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useRepositoryStore } from "../../store/repositoryStore";
+import { useFavoritesStore } from "../../store/favoritesStore";
 
 const IndividualRepoScreen = () => {
   const navigation = useNavigation();
   const { selectedRepository, setSelectedRepository } = useRepositoryStore();
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
 
   if (!selectedRepository) {
     return (
@@ -43,7 +45,17 @@ const IndividualRepoScreen = () => {
           <FontAwesome name="arrow-left" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Repository Details</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          onPress={() => toggleFavorite(selectedRepository.id)}
+          style={styles.favoriteButton}
+          testID="favorite-button"
+        >
+          <FontAwesome
+            name={isFavorite(selectedRepository.id) ? "heart" : "heart-o"}
+            size={24}
+            color="#e74c3c"
+          />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -109,8 +121,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
   },
-  placeholder: {
-    width: 40,
+  favoriteButton: {
+    padding: 8,
   },
   content: {
     flex: 1,

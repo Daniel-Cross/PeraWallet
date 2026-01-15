@@ -29,4 +29,14 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   clear: jest.fn(),
 }));
 
+// Mock zustand persist middleware
+jest.mock("zustand/middleware", () => ({
+  persist: (config) => config,
+  createJSONStorage: () => ({
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+  }),
+}));
+
 jest.mock("react-native/Libraries/Animated/NativeAnimatedHelper");

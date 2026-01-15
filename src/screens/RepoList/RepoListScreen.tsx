@@ -16,6 +16,7 @@ import {
 } from "../../lib/filterHelpers";
 import { useFilterStore } from "../../store/filterStore";
 import { useRepositoryStore } from "../../store/repositoryStore";
+import { useFavoritesStore } from "../../store/favoritesStore";
 import FilterModal from "../../components/molecules/FilterModal";
 import Loading from "../../components/atoms/Loading";
 import ListEmpty from "../../components/atoms/ListEmpty";
@@ -32,6 +33,7 @@ const RepoListScreen = () => {
   const { data, isLoading, error } = useGithubRepos();
   const { isModalVisible, searchText } = useFilterStore();
   const { setSelectedRepository } = useRepositoryStore();
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
 
   const organizations = useMemo(() => {
     if (!data) return [];
@@ -83,13 +85,31 @@ const RepoListScreen = () => {
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.owner}>@{item.owner.login}</Text>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.description}>{item.description}</Text>
-            <Text style={styles.stars}>
-              <FontAwesome name="star" size={24} color="salmon" />
-              {item.stargazers_count}
-            </Text>
+            <View style={styles.itemContent}>
+              <View style={styles.itemTextContainer}>
+                <Text style={styles.owner}>@{item.owner.login}</Text>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.description}>{item.description}</Text>
+                <Text style={styles.stars}>
+                  <FontAwesome name="star" size={16} color="salmon" />{" "}
+                  {item.stargazers_count}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={(e) => {
+                  e?.stopPropagation?.();
+                  toggleFavorite(item.id);
+                }}
+                style={styles.favoriteIcon}
+                testID={`favorite-icon-${item.id}`}
+              >
+                <FontAwesome
+                  name={isFavorite(item.id) ? "heart" : "heart-o"}
+                  size={24}
+                  color="#e74c3c"
+                />
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         )}
         keyExtractor={(item) => item.id.toString()}
@@ -121,6 +141,18 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
+  },
+  itemContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  itemTextContainer: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  favoriteIcon: {
+    padding: 4,
   },
   owner: {
     fontSize: 12,

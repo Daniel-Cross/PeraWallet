@@ -2,11 +2,18 @@ import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
 import IndividualRepoScreen from "../screens/IndividualRepo/IndividualRepoScreen";
 import { useRepositoryStore } from "../store/repositoryStore";
+import { useFavoritesStore } from "../store/favoritesStore";
 import { useNavigation } from "@react-navigation/native";
 import * as Linking from "react-native";
 
 jest.mock("@expo/vector-icons/FontAwesome", () => "FontAwesome");
 jest.mock("../store/repositoryStore");
+
+// Mock the favoritesStore before it's imported
+jest.mock("../store/favoritesStore", () => ({
+  useFavoritesStore: jest.fn(),
+}));
+
 jest.mock("@react-navigation/native", () => ({
   useNavigation: jest.fn(),
 }));
@@ -31,10 +38,16 @@ describe("IndividualRepoScreen", () => {
   };
 
   const mockSetSelectedRepository = jest.fn();
+  const mockIsFavorite = jest.fn();
+  const mockToggleFavorite = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
     (useNavigation as jest.Mock).mockReturnValue(mockNavigation);
+    (useFavoritesStore as unknown as jest.Mock).mockReturnValue({
+      isFavorite: mockIsFavorite,
+      toggleFavorite: mockToggleFavorite,
+    });
   });
 
   it("should render 'No repository selected' when no repository is selected", () => {
@@ -141,5 +154,48 @@ describe("IndividualRepoScreen", () => {
 
     const { getByText } = render(<IndividualRepoScreen />);
     expect(getByText("123,456 stars")).toBeTruthy();
+  });
+
+  it("should display filled heart icon when repository is favorited", () => {
+    mockIsFavorite.mockReturnValue(true);
+    (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
+      selectedRepository: mockRepository,
+      setSelectedRepository: mockSetSelectedRepository,
+    });
+
+    const { getByTestId } = render(<IndividualRepoScreen />);
+    const favoriteButton = getByTestId("favorite-button");
+
+    expect(favoriteButton).toBeTruthy();
+    expect(mockIsFavorite).toHaveBeenCalledWith(mockRepository.id);
+  });
+
+  it("should display empty heart icon when repository is not favorited", () => {
+    mockIsFavorite.mockReturnValue(false);
+    (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
+      selectedRepository: mockRepository,
+      setSelectedRepository: mockSetSelectedRepository,
+    });
+
+    const { getByTestId } = render(<IndividualRepoScreen />);
+    const favoriteButton = getByTestId("favorite-button");
+
+    expect(favoriteButton).toBeTruthy();
+    expect(mockIsFavorite).toHaveBeenCalledWith(mockRepository.id);
+  });
+
+  it("should toggle favorite when favorite button is pressed", () => {
+    mockIsFavorite.mockReturnValue(false);
+    (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
+      selectedRepository: mockRepository,
+      setSelectedRepository: mockSetSelectedRepository,
+    });
+
+    const { getByTestId } = render(<IndividualRepoScreen />);
+    const favoriteButton = getByTestId("favorite-button");
+
+    fireEvent.press(favoriteButton);
+
+    expect(mockToggleFavorite).toHaveBeenCalledWith(mockRepository.id);
   });
 });
