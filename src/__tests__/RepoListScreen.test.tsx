@@ -3,11 +3,19 @@ import { render, waitFor } from "@testing-library/react-native";
 import RepoListScreen from "../screens/RepoList/RepoListScreen";
 import { useGithubRepos } from "../hooks/useGithubRepos";
 import { useFilterStore } from "../store/filterStore";
+import { useRepositoryStore } from "../store/repositoryStore";
 
 jest.mock("@expo/vector-icons/FontAwesome", () => "FontAwesome");
 
 jest.mock("../hooks/useGithubRepos");
 jest.mock("../store/filterStore");
+jest.mock("../store/repositoryStore");
+
+jest.mock("@react-navigation/native", () => ({
+  useNavigation: () => ({
+    navigate: jest.fn(),
+  }),
+}));
 
 jest.mock("../components/molecules/SearchAndFilter", () => {
   const React = require("react");
@@ -71,6 +79,10 @@ describe("RepoListScreen", () => {
     (useFilterStore as unknown as jest.Mock).mockReturnValue({
       isModalVisible: false,
       searchText: "",
+    });
+    (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
+      selectedRepository: null,
+      setSelectedRepository: jest.fn(),
     });
   });
 

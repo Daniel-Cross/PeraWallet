@@ -35,7 +35,11 @@ const IndividualRepoScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={handleGoBack}
+          style={styles.backButton}
+          testID="back-button"
+        >
           <FontAwesome name="arrow-left" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Repository Details</Text>
