@@ -1,16 +1,13 @@
 import { Repository } from "../services/githubApi";
 
 /**
- * Toggle an organization in the selected organizations array
+ * Toggle an item in a selected array
  */
-export const toggleOrganization = (
-  selectedOrganizations: string[],
-  org: string
-): string[] => {
-  if (selectedOrganizations.includes(org)) {
-    return selectedOrganizations.filter((o) => o !== org);
+export const toggleItem = (selectedItems: string[], item: string): string[] => {
+  if (selectedItems.includes(item)) {
+    return selectedItems.filter((i) => i !== item);
   }
-  return [...selectedOrganizations, org];
+  return [...selectedItems, item];
 };
 
 /**
@@ -24,12 +21,14 @@ export const extractUniqueOrganizations = (
 };
 
 /**
- * Filter repositories by search query and selected organizations
+ * Filter repositories by multiple criteria
+ * Note: Empty selectedOrganizations array means "show all" for that filter
  */
 export const filterRepositories = (
   repositories: Repository[],
   searchQuery: string,
-  selectedOrganizations: string[]
+  selectedOrganizations: string[],
+  minStars: number
 ): Repository[] => {
   return repositories.filter((repo) => {
     const matchesSearch =
@@ -38,9 +37,12 @@ export const filterRepositories = (
       repo.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesOrganization =
-      selectedOrganizations.length > 0 &&
+      !selectedOrganizations ||
+      selectedOrganizations.length === 0 ||
       selectedOrganizations.includes(repo.owner.login);
 
-    return matchesSearch && matchesOrganization;
+    const matchesStars = repo.stargazers_count >= minStars;
+
+    return matchesSearch && matchesOrganization && matchesStars;
   });
 };

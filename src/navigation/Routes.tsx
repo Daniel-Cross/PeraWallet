@@ -5,9 +5,10 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import IndividualRepoScreen from "../screens/IndividualRepoScreen";
 import TabNavigation from "./TabStack";
+import { ROUTES } from "../types/constants";
 
 export type MainStackParamList = {
-  RepoList: undefined;
+  Tabs: undefined;
   IndividualRepo: undefined;
 };
 
@@ -19,7 +20,7 @@ const Routes = () => {
     return (
       <MainStack.Navigator>
         <MainStack.Screen
-          name="RepoList"
+          name={ROUTES.TABS}
           component={TabNavigation}
           options={{
             headerShown: false,
@@ -27,7 +28,7 @@ const Routes = () => {
           }}
         />
         <MainStack.Screen
-          name="IndividualRepo"
+          name={ROUTES.INDIVIDUAL_REPO}
           component={IndividualRepoScreen}
           options={{
             headerShown: false,

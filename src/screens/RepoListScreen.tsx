@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import {
   FlatList,
   Text,
@@ -12,7 +12,6 @@ import SearchAndFilter from "../components/molecules/SearchAndFilter";
 import {
   extractUniqueOrganizations,
   filterRepositories,
-  toggleOrganization,
 } from "../lib/filterHelpers";
 import { useFilterStore } from "../store/filterStore";
 import { useRepositoryStore } from "../store/repositoryStore";
@@ -31,7 +30,13 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 const RepoListScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const { data, isLoading, error } = useGithubRepos();
-  const { isModalVisible, searchText } = useFilterStore();
+  const {
+    isModalVisible,
+    searchText,
+    selectedOrganizations,
+    setSelectedOrganizations,
+    minStars,
+  } = useFilterStore();
   const { setSelectedRepository } = useRepositoryStore();
   const { isFavourite, toggleFavourite } = useFavouritesStore();
 
@@ -40,25 +45,24 @@ const RepoListScreen = () => {
     return extractUniqueOrganizations(data);
   }, [data]);
 
-  const [selectedOrganizations, setSelectedOrganizations] = useState<string[]>(
-    []
-  );
+  const hasInitializedOrgs = useRef(false);
 
   useEffect(() => {
-    if (organizations.length > 0 && selectedOrganizations.length === 0) {
+    if (organizations.length > 0 && !hasInitializedOrgs.current) {
       setSelectedOrganizations(organizations);
+      hasInitializedOrgs.current = true;
     }
-  }, [organizations]);
+  }, [organizations, setSelectedOrganizations]);
 
   const filteredData = useMemo(() => {
     if (!data) return [];
-    return filterRepositories(data, searchText, selectedOrganizations);
-  }, [data, searchText, selectedOrganizations]);
-
-  const handleOrganizationToggle = (org: string) => {
-    const updatedOrganizations = toggleOrganization(selectedOrganizations, org);
-    setSelectedOrganizations(updatedOrganizations);
-  };
+    return filterRepositories(
+      data,
+      searchText,
+      selectedOrganizations,
+      minStars
+    );
+  }, [data, searchText, selectedOrganizations, minStars]);
 
   if (isLoading) {
     return <Loading />;
@@ -118,13 +122,7 @@ const RepoListScreen = () => {
         ListEmptyComponent={<ListEmpty />}
       />
 
-      {isModalVisible && (
-        <FilterModal
-          selectedOrganizations={selectedOrganizations}
-          organizations={organizations}
-          handleOrganizationToggle={handleOrganizationToggle}
-        />
-      )}
+      {isModalVisible && <FilterModal organizations={organizations} />}
     </SafeAreaView>
   );
 };
@@ -134,7 +132,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   flatList: {
-    marginBottom: 30,
+    marginBottom: 40,
   },
   center: {
     flex: 1,

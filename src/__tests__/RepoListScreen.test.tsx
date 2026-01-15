@@ -84,6 +84,10 @@ describe("RepoListScreen", () => {
     (useFilterStore as unknown as jest.Mock).mockReturnValue({
       isModalVisible: false,
       searchText: "",
+      selectedOrganizations: [],
+      setSelectedOrganizations: jest.fn(),
+      minStars: 0,
+      setMinStars: jest.fn(),
     });
     (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
       selectedRepository: null,
@@ -154,7 +158,6 @@ describe("RepoListScreen", () => {
     });
 
     const { getByText } = render(<RepoListScreen />);
-    // The SearchAndFilter component renders, we can verify by checking repos are rendered
     expect(getByText("react")).toBeTruthy();
   });
 
@@ -167,10 +170,13 @@ describe("RepoListScreen", () => {
     (useFilterStore as unknown as jest.Mock).mockReturnValue({
       isModalVisible: true,
       searchText: "",
+      selectedOrganizations: [],
+      setSelectedOrganizations: jest.fn(),
+      minStars: 0,
+      setMinStars: jest.fn(),
     });
 
     const { getByText } = render(<RepoListScreen />);
-    // Modal is conditionally rendered based on isModalVisible, verify screen renders
     expect(getByText("react")).toBeTruthy();
   });
 
@@ -183,10 +189,13 @@ describe("RepoListScreen", () => {
     (useFilterStore as unknown as jest.Mock).mockReturnValue({
       isModalVisible: false,
       searchText: "",
+      selectedOrganizations: [],
+      setSelectedOrganizations: jest.fn(),
+      minStars: 0,
+      setMinStars: jest.fn(),
     });
 
     const { getByText } = render(<RepoListScreen />);
-    // Verify the screen renders without modal
     expect(getByText("react")).toBeTruthy();
   });
 
@@ -210,9 +219,7 @@ describe("RepoListScreen", () => {
 
     const { getByText } = render(<RepoListScreen />);
 
-    // Wait for useEffect to set selectedOrganizations
     await waitFor(() => {
-      // All repos should be visible initially
       expect(getByText("react")).toBeTruthy();
       expect(getByText("angular")).toBeTruthy();
       expect(getByText("typescript")).toBeTruthy();

@@ -2,7 +2,6 @@ import { renderHook, act } from "@testing-library/react-native";
 import { useFavouritesStore } from "../store/favouritesStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Mock AsyncStorage
 jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),

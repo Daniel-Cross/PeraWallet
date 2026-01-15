@@ -18,7 +18,6 @@ describe("repositoryStore", () => {
   };
 
   beforeEach(() => {
-    // Reset store state before each test
     const { result } = renderHook(() => useRepositoryStore());
     act(() => {
       result.current.setSelectedRepository(null);
