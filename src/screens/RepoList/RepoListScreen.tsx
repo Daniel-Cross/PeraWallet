@@ -1,5 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
-import { FlatList, Text, View, StyleSheet } from "react-native";
+import {
+  FlatList,
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { useGithubRepos } from "../../hooks/useGithubRepos";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SearchAndFilter from "../../components/molecules/SearchAndFilter";
@@ -9,14 +15,23 @@ import {
   toggleOrganization,
 } from "../../lib/filterHelpers";
 import { useFilterStore } from "../../store/filterStore";
+import { useRepositoryStore } from "../../store/repositoryStore";
 import FilterModal from "../../components/molecules/FilterModal";
 import Loading from "../../components/atoms/Loading";
 import ListEmpty from "../../components/atoms/ListEmpty";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { MainStackParamList } from "../Routes";
+import { ROUTES } from "../../types/constants";
+
+type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 const RepoListScreen = () => {
+  const navigation = useNavigation<NavigationProp>();
   const { data, isLoading, error } = useGithubRepos();
   const { isModalVisible, searchText } = useFilterStore();
+  const { setSelectedRepository } = useRepositoryStore();
 
   const organizations = useMemo(() => {
     if (!data) return [];
@@ -60,7 +75,14 @@ const RepoListScreen = () => {
       <FlatList
         data={filteredData}
         renderItem={({ item }) => (
-          <View style={styles.item}>
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() => {
+              setSelectedRepository(item);
+              navigation.navigate(ROUTES.INDIVIDUAL_REPO);
+            }}
+            activeOpacity={0.7}
+          >
             <Text style={styles.owner}>@{item.owner.login}</Text>
             <Text style={styles.name}>{item.name}</Text>
             <Text style={styles.description}>{item.description}</Text>
@@ -68,7 +90,7 @@ const RepoListScreen = () => {
               <FontAwesome name="star" size={24} color="salmon" />
               {item.stargazers_count}
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
         keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={<SearchAndFilter />}
