@@ -32,6 +32,7 @@ const SearchAndFilter = () => {
       <TouchableOpacity
         style={styles.filterButton}
         onPress={() => setModalVisible(true)}
+        testID="filter-button"
       >
         <Text style={styles.filterButtonText}>
           <FontAwesome name="filter" size={24} color="white" />

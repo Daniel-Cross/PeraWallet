@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 const ListEmpty = () => {
   return (
     <View style={styles.center}>
-      <Text>No data found. Please check your filters.</Text>
+      <Text>No data found. Please check your search filters.</Text>
     </View>
   );
 };

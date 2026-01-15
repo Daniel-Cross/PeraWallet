@@ -60,19 +60,19 @@ describe("filterHelpers", () => {
       } as Repository,
     ];
 
-    it("should return all repos when no filters applied", () => {
+    it("should return empty array when no organizations are selected", () => {
       const result = filterRepositories(mockRepos, "", []);
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(0);
     });
 
-    it("should filter by search query in name", () => {
-      const result = filterRepositories(mockRepos, "react", []);
+    it("should filter by search query in name when organizations are selected", () => {
+      const result = filterRepositories(mockRepos, "react", ["facebook"]);
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe("react-app");
     });
 
-    it("should filter by search query in description", () => {
-      const result = filterRepositories(mockRepos, "vue application", []);
+    it("should filter by search query in description when organizations are selected", () => {
+      const result = filterRepositories(mockRepos, "vue application", ["vuejs"]);
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe("vue-app");
     });
@@ -90,9 +90,14 @@ describe("filterHelpers", () => {
     });
 
     it("should be case insensitive for search", () => {
-      const result = filterRepositories(mockRepos, "REACT", []);
+      const result = filterRepositories(mockRepos, "REACT", ["facebook"]);
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe("react-app");
+    });
+
+    it("should return all repos when all organizations are selected", () => {
+      const result = filterRepositories(mockRepos, "", ["facebook", "vuejs", "angular"]);
+      expect(result).toHaveLength(3);
     });
   });
 });

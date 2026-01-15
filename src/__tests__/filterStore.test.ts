@@ -3,7 +3,6 @@ import { useFilterStore } from "../store/filterStore";
 
 describe("filterStore", () => {
   beforeEach(() => {
-    // Reset store state before each test
     const { result } = renderHook(() => useFilterStore());
     act(() => {
       result.current.setModalVisible(false);

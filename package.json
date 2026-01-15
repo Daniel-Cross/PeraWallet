@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build-android": "chmod +x ./build-and-run-android.sh && ./build-and-run-android.sh",
-    "build-ios": "chmod +x ./build-and-run-ios.sh && ./build-and-run-ios.sh"
+    "build-ios": "chmod +x ./build-and-run-ios.sh && ./build-and-run-ios.sh",
+    "test": "jest --watchAll"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -30,10 +31,15 @@
   },
   "devDependencies": {
     "@testing-library/react-native": "^13.3.3",
-    "@types/jest": "^30.0.0",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.1.0",
+    "jest": "~29.7.0",
+    "jest-expo": "~54.0.16",
     "react-test-renderer": "^19.1.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+   "jest": {
+    "preset": "jest-expo"
+  }
 }
