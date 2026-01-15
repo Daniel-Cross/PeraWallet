@@ -1,4 +1,3 @@
-// src/services/githubApi.ts
 export interface Repository {
   id: number;
   name: string;
@@ -13,7 +12,7 @@ export interface Repository {
   };
 }
 
-const DEFAULT_USERS = ["algorand", "perawallet", "perawallet"];
+const DEFAULT_USERS = ["algorandfoundation", "algorand", "perawallet"];
 
 export const fetchGithubRepos = async (
   usernames: string[] = DEFAULT_USERS

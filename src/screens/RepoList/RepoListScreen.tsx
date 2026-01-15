@@ -1,23 +1,50 @@
-// src/screens/RepoList/RepoListScreen.tsx
-import {
-  FlatList,
-  Text,
-  View,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
+import { useState, useMemo, useEffect } from "react";
+import { FlatList, Text, View, StyleSheet } from "react-native";
 import { useGithubRepos } from "../../hooks/useGithubRepos";
 import { SafeAreaView } from "react-native-safe-area-context";
+import SearchAndFilter from "../../components/molecules/SearchAndFilter";
+import {
+  extractUniqueOrganizations,
+  filterRepositories,
+  toggleOrganization,
+} from "../../lib/filterHelpers";
+import { useFilterStore } from "../../store/filterStore";
+import FilterModal from "../../components/molecules/FilterModal";
+import Loading from "../../components/atoms/Loading";
+import ListEmpty from "../../components/atoms/ListEmpty";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 const RepoListScreen = () => {
-  const { data, isLoading, error } = useGithubRepos(); // Uses default 3 users
+  const { data, isLoading, error } = useGithubRepos();
+  const { isModalVisible, searchText } = useFilterStore();
+
+  const organizations = useMemo(() => {
+    if (!data) return [];
+    return extractUniqueOrganizations(data);
+  }, [data]);
+
+  const [selectedOrganizations, setSelectedOrganizations] = useState<string[]>(
+    []
+  );
+
+  useEffect(() => {
+    if (organizations.length > 0 && selectedOrganizations.length === 0) {
+      setSelectedOrganizations(organizations);
+    }
+  }, [organizations]);
+
+  const filteredData = useMemo(() => {
+    if (!data) return [];
+    return filterRepositories(data, searchText, selectedOrganizations);
+  }, [data, searchText, selectedOrganizations]);
+
+  const handleOrganizationToggle = (org: string) => {
+    const updatedOrganizations = toggleOrganization(selectedOrganizations, org);
+    setSelectedOrganizations(updatedOrganizations);
+  };
 
   if (isLoading) {
-    return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" />
-      </SafeAreaView>
-    );
+    return <Loading />;
   }
 
   if (error) {
@@ -31,17 +58,30 @@ const RepoListScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={data}
+        data={filteredData}
         renderItem={({ item }) => (
           <View style={styles.item}>
             <Text style={styles.owner}>@{item.owner.login}</Text>
             <Text style={styles.name}>{item.name}</Text>
             <Text style={styles.description}>{item.description}</Text>
-            <Text style={styles.stars}>⭐ {item.stargazers_count}</Text>
+            <Text style={styles.stars}>
+              <FontAwesome name="star" size={24} color="salmon" />
+              {item.stargazers_count}
+            </Text>
           </View>
         )}
         keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={<SearchAndFilter />}
+        ListEmptyComponent={<ListEmpty />}
       />
+
+      {isModalVisible && (
+        <FilterModal
+          selectedOrganizations={selectedOrganizations}
+          organizations={organizations}
+          handleOrganizationToggle={handleOrganizationToggle}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -75,7 +115,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   stars: {
-    fontSize: 12,
+    fontSize: 16,
     marginTop: 4,
   },
 });

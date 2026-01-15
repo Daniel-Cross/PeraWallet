@@ -1,4 +1,3 @@
-// src/hooks/useGithubRepos.ts
 import { useQuery } from "@tanstack/react-query";
 import { fetchGithubRepos } from "../services/githubApi";
 
