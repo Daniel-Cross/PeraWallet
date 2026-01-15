@@ -2,7 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { queryClient, asyncStoragePersister } from "./src/lib/queryClient";
-import Routes from "./src/screens/Routes";
+import Routes from "./src/navigation/Routes";
 
 export default function App() {
   return (

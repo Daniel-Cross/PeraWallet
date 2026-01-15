@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react-native";
-import { useFavoritesStore } from "../store/favoritesStore";
+import { useFavouritesStore } from "../store/favouritesStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Mock AsyncStorage
@@ -9,134 +9,125 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   removeItem: jest.fn(),
 }));
 
-describe("favoritesStore", () => {
+describe("favouritesStore", () => {
   beforeEach(async () => {
-    // Clear AsyncStorage mock
     jest.clearAllMocks();
     (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
 
-    // Reset store state
-    const { result } = renderHook(() => useFavoritesStore());
+    const { result } = renderHook(() => useFavouritesStore());
     act(() => {
-      // Clear all favorites by toggling them off
-      result.current.favoriteIds.forEach((id) => {
-        if (result.current.isFavorite(id)) {
-          result.current.toggleFavorite(id);
+      result.current.favouriteIds.forEach((id) => {
+        if (result.current.isFavourite(id)) {
+          result.current.toggleFavourite(id);
         }
       });
     });
   });
 
   it("should have empty array as initial state", () => {
-    const { result } = renderHook(() => useFavoritesStore());
-    expect(result.current.favoriteIds).toEqual([]);
+    const { result } = renderHook(() => useFavouritesStore());
+    expect(result.current.favouriteIds).toEqual([]);
   });
 
-  it("should check if repository is favorite", () => {
-    const { result } = renderHook(() => useFavoritesStore());
+  it("should check if repository is favourite", () => {
+    const { result } = renderHook(() => useFavouritesStore());
 
-    expect(result.current.isFavorite(1)).toBe(false);
+    expect(result.current.isFavourite(1)).toBe(false);
 
     act(() => {
-      result.current.toggleFavorite(1);
+      result.current.toggleFavourite(1);
     });
 
-    expect(result.current.isFavorite(1)).toBe(true);
+    expect(result.current.isFavourite(1)).toBe(true);
   });
 
-  it("should toggle favorite on", () => {
-    const { result } = renderHook(() => useFavoritesStore());
-
-    expect(result.current.isFavorite(1)).toBe(false);
+  it("should toggle favourite on", () => {
+    const { result } = renderHook(() => useFavouritesStore());
+    expect(result.current.isFavourite(1)).toBe(false);
 
     act(() => {
-      result.current.toggleFavorite(1);
+      result.current.toggleFavourite(1);
     });
 
-    expect(result.current.isFavorite(1)).toBe(true);
-    expect(result.current.favoriteIds).toContain(1);
+    expect(result.current.isFavourite(1)).toBe(true);
+    expect(result.current.favouriteIds).toContain(1);
   });
 
-  it("should toggle favorite off", () => {
-    const { result } = renderHook(() => useFavoritesStore());
-
+  it("should toggle favourite off", () => {
+    const { result } = renderHook(() => useFavouritesStore());
     act(() => {
-      result.current.toggleFavorite(1);
+      result.current.toggleFavourite(1);
     });
 
-    expect(result.current.isFavorite(1)).toBe(true);
+    expect(result.current.isFavourite(1)).toBe(true);
 
     act(() => {
-      result.current.toggleFavorite(1);
+      result.current.toggleFavourite(1);
     });
 
-    expect(result.current.isFavorite(1)).toBe(false);
-    expect(result.current.favoriteIds).not.toContain(1);
+    expect(result.current.isFavourite(1)).toBe(false);
+    expect(result.current.favouriteIds).not.toContain(1);
   });
 
   it("should toggle multiple times", () => {
-    const { result } = renderHook(() => useFavoritesStore());
+    const { result } = renderHook(() => useFavouritesStore());
+    act(() => {
+      result.current.toggleFavourite(1);
+    });
+    expect(result.current.isFavourite(1)).toBe(true);
+    act(() => {
+      result.current.toggleFavourite(1);
+    });
+    expect(result.current.isFavourite(1)).toBe(false);
 
     act(() => {
-      result.current.toggleFavorite(1);
+      result.current.toggleFavourite(1);
     });
-    expect(result.current.isFavorite(1)).toBe(true);
-
-    act(() => {
-      result.current.toggleFavorite(1);
-    });
-    expect(result.current.isFavorite(1)).toBe(false);
-
-    act(() => {
-      result.current.toggleFavorite(1);
-    });
-    expect(result.current.isFavorite(1)).toBe(true);
+    expect(result.current.isFavourite(1)).toBe(true);
   });
 
-  it("should handle multiple favorites", () => {
-    const { result } = renderHook(() => useFavoritesStore());
-
+  it("should handle multiple favourites", () => {
+    const { result } = renderHook(() => useFavouritesStore());
     act(() => {
-      result.current.toggleFavorite(1);
-      result.current.toggleFavorite(2);
-      result.current.toggleFavorite(3);
+      result.current.toggleFavourite(1);
+      result.current.toggleFavourite(2);
+      result.current.toggleFavourite(3);
     });
 
-    expect(result.current.favoriteIds).toEqual([1, 2, 3]);
-    expect(result.current.isFavorite(1)).toBe(true);
-    expect(result.current.isFavorite(2)).toBe(true);
-    expect(result.current.isFavorite(3)).toBe(true);
+    expect(result.current.favouriteIds).toEqual([1, 2, 3]);
+    expect(result.current.isFavourite(1)).toBe(true);
+    expect(result.current.isFavourite(2)).toBe(true);
+    expect(result.current.isFavourite(3)).toBe(true);
   });
 
-  it("should remove specific favorite when toggled off", () => {
-    const { result } = renderHook(() => useFavoritesStore());
+  it("should remove specific favourite when toggled off", () => {
+    const { result } = renderHook(() => useFavouritesStore());
 
     act(() => {
-      result.current.toggleFavorite(1);
-      result.current.toggleFavorite(2);
+      result.current.toggleFavourite(1);
+      result.current.toggleFavourite(2);
     });
 
-    expect(result.current.favoriteIds).toContain(1);
+    expect(result.current.favouriteIds).toContain(1);
 
     act(() => {
-      result.current.toggleFavorite(1);
+      result.current.toggleFavourite(1);
     });
 
-    expect(result.current.favoriteIds).not.toContain(1);
-    expect(result.current.favoriteIds).toContain(2);
-    expect(result.current.isFavorite(1)).toBe(false);
+    expect(result.current.favouriteIds).not.toContain(1);
+    expect(result.current.favouriteIds).toContain(2);
+    expect(result.current.isFavourite(1)).toBe(false);
   });
 
   it("should persist state across hook instances", () => {
-    const { result: result1 } = renderHook(() => useFavoritesStore());
-
+    const { result: result1 } = renderHook(() => useFavouritesStore());
     act(() => {
-      result1.current.toggleFavorite(1);
+      result1.current.toggleFavourite(1);
     });
 
-    const { result: result2 } = renderHook(() => useFavoritesStore());
+    const { result: result2 } = renderHook(() => useFavouritesStore());
 
-    expect(result2.current.favoriteIds).toContain(1);
-    expect(result2.current.isFavorite(1)).toBe(true);
+    expect(result2.current.favouriteIds).toContain(1);
+    expect(result2.current.isFavourite(1)).toBe(true);
   });
 });

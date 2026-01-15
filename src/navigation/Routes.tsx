@@ -3,8 +3,8 @@ import {
   NavigationContainer,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import RepoListScreen from "./RepoList/RepoListScreen";
-import IndividualRepoScreen from "./IndividualRepo/IndividualRepoScreen";
+import IndividualRepoScreen from "../screens/IndividualRepoScreen";
+import TabNavigation from "./TabStack";
 
 export type MainStackParamList = {
   RepoList: undefined;
@@ -20,7 +20,7 @@ const Routes = () => {
       <MainStack.Navigator>
         <MainStack.Screen
           name="RepoList"
-          component={RepoListScreen}
+          component={TabNavigation}
           options={{
             headerShown: false,
             gestureEnabled: false,

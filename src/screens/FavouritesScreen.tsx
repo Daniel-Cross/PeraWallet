@@ -1,81 +1,57 @@
-import { useState, useMemo, useEffect } from "react";
 import {
-  FlatList,
   Text,
   View,
   StyleSheet,
+  FlatList,
   TouchableOpacity,
 } from "react-native";
-import { useGithubRepos } from "../../hooks/useGithubRepos";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SearchAndFilter from "../../components/molecules/SearchAndFilter";
-import {
-  extractUniqueOrganizations,
-  filterRepositories,
-  toggleOrganization,
-} from "../../lib/filterHelpers";
-import { useFilterStore } from "../../store/filterStore";
-import { useRepositoryStore } from "../../store/repositoryStore";
-import { useFavoritesStore } from "../../store/favoritesStore";
-import FilterModal from "../../components/molecules/FilterModal";
-import Loading from "../../components/atoms/Loading";
-import ListEmpty from "../../components/atoms/ListEmpty";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useFavouritesStore } from "../store/favouritesStore";
+import { useGithubRepos } from "../hooks/useGithubRepos";
+import { useRepositoryStore } from "../store/repositoryStore";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { MainStackParamList } from "../Routes";
-import { ROUTES } from "../../types/constants";
+import { MainStackParamList } from "../navigation/Routes";
+import { ROUTES } from "../types/constants";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Loading from "../components/atoms/Loading";
+import { useMemo } from "react";
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
-const RepoListScreen = () => {
+const FavouritesScreen = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { data, isLoading, error } = useGithubRepos();
-  const { isModalVisible, searchText } = useFilterStore();
+  const { favouriteIds, isFavourite, toggleFavourite } = useFavouritesStore();
+  const { data, isLoading } = useGithubRepos();
   const { setSelectedRepository } = useRepositoryStore();
-  const { isFavorite, toggleFavorite } = useFavoritesStore();
 
-  const organizations = useMemo(() => {
+  const favouriteRepos = useMemo(() => {
     if (!data) return [];
-    return extractUniqueOrganizations(data);
-  }, [data]);
-
-  const [selectedOrganizations, setSelectedOrganizations] = useState<string[]>(
-    []
-  );
-
-  useEffect(() => {
-    if (organizations.length > 0 && selectedOrganizations.length === 0) {
-      setSelectedOrganizations(organizations);
-    }
-  }, [organizations]);
-
-  const filteredData = useMemo(() => {
-    if (!data) return [];
-    return filterRepositories(data, searchText, selectedOrganizations);
-  }, [data, searchText, selectedOrganizations]);
-
-  const handleOrganizationToggle = (org: string) => {
-    const updatedOrganizations = toggleOrganization(selectedOrganizations, org);
-    setSelectedOrganizations(updatedOrganizations);
-  };
+    return data.filter((repo) => favouriteIds.includes(repo.id));
+  }, [data, favouriteIds]);
 
   if (isLoading) {
     return <Loading />;
   }
 
-  if (error) {
+  if (favouriteRepos.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text>Error: {error.message}</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <FontAwesome name="heart-o" size={64} color="#ccc" />
+          <Text style={styles.emptyTitle}>No Favourites Yet</Text>
+          <Text style={styles.emptyMessage}>
+            Tap the heart icon on any repository to add it to your favourites
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={filteredData}
+        data={favouriteRepos}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.item}
@@ -98,13 +74,13 @@ const RepoListScreen = () => {
               <TouchableOpacity
                 onPress={(e) => {
                   e?.stopPropagation?.();
-                  toggleFavorite(item.id);
+                  toggleFavourite(item.id);
                 }}
-                style={styles.favoriteIcon}
-                testID={`favorite-icon-${item.id}`}
+                style={styles.favouriteIcon}
+                testID={`favourite-icon-${item.id}`}
               >
                 <FontAwesome
-                  name={isFavorite(item.id) ? "heart" : "heart-o"}
+                  name={isFavourite(item.id) ? "heart" : "heart-o"}
                   size={24}
                   color="#e74c3c"
                 />
@@ -113,17 +89,7 @@ const RepoListScreen = () => {
           </TouchableOpacity>
         )}
         keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={<SearchAndFilter />}
-        ListEmptyComponent={<ListEmpty />}
       />
-
-      {isModalVisible && (
-        <FilterModal
-          selectedOrganizations={selectedOrganizations}
-          organizations={organizations}
-          handleOrganizationToggle={handleOrganizationToggle}
-        />
-      )}
     </SafeAreaView>
   );
 };
@@ -131,11 +97,26 @@ const RepoListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff",
   },
-  center: {
+  emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 32,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginTop: 24,
+    marginBottom: 8,
+    color: "#333",
+  },
+  emptyMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 24,
   },
   item: {
     padding: 16,
@@ -151,7 +132,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: 12,
   },
-  favoriteIcon: {
+  favouriteIcon: {
     padding: 4,
   },
   owner: {
@@ -174,4 +155,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RepoListScreen;
+export default FavouritesScreen;

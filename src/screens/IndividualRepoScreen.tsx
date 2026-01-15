@@ -9,13 +9,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useRepositoryStore } from "../../store/repositoryStore";
-import { useFavoritesStore } from "../../store/favoritesStore";
+import { useRepositoryStore } from "../store/repositoryStore";
+import { useFavouritesStore } from "../store/favouritesStore";
 
 const IndividualRepoScreen = () => {
   const navigation = useNavigation();
   const { selectedRepository, setSelectedRepository } = useRepositoryStore();
-  const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const { isFavourite, toggleFavourite } = useFavouritesStore();
 
   if (!selectedRepository) {
     return (
@@ -46,12 +46,12 @@ const IndividualRepoScreen = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Repository Details</Text>
         <TouchableOpacity
-          onPress={() => toggleFavorite(selectedRepository.id)}
-          style={styles.favoriteButton}
-          testID="favorite-button"
+          onPress={() => toggleFavourite(selectedRepository.id)}
+          style={styles.favouriteButton}
+          testID="favourite-button"
         >
           <FontAwesome
-            name={isFavorite(selectedRepository.id) ? "heart" : "heart-o"}
+            name={isFavourite(selectedRepository.id) ? "heart" : "heart-o"}
             size={24}
             color="#e74c3c"
           />
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
   },
-  favoriteButton: {
+  favouriteButton: {
     padding: 8,
   },
   content: {

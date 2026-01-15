@@ -1,17 +1,16 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
-import IndividualRepoScreen from "../screens/IndividualRepo/IndividualRepoScreen";
+import IndividualRepoScreen from "../screens/IndividualRepoScreen";
 import { useRepositoryStore } from "../store/repositoryStore";
-import { useFavoritesStore } from "../store/favoritesStore";
+import { useFavouritesStore } from "../store/favouritesStore";
 import { useNavigation } from "@react-navigation/native";
 import * as Linking from "react-native";
 
 jest.mock("@expo/vector-icons/FontAwesome", () => "FontAwesome");
 jest.mock("../store/repositoryStore");
 
-// Mock the favoritesStore before it's imported
-jest.mock("../store/favoritesStore", () => ({
-  useFavoritesStore: jest.fn(),
+jest.mock("../store/favouritesStore", () => ({
+  useFavouritesStore: jest.fn(),
 }));
 
 jest.mock("@react-navigation/native", () => ({
@@ -38,15 +37,15 @@ describe("IndividualRepoScreen", () => {
   };
 
   const mockSetSelectedRepository = jest.fn();
-  const mockIsFavorite = jest.fn();
-  const mockToggleFavorite = jest.fn();
+  const mockIsFavourite = jest.fn();
+  const mockToggleFavourite = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
     (useNavigation as jest.Mock).mockReturnValue(mockNavigation);
-    (useFavoritesStore as unknown as jest.Mock).mockReturnValue({
-      isFavorite: mockIsFavorite,
-      toggleFavorite: mockToggleFavorite,
+    (useFavouritesStore as unknown as jest.Mock).mockReturnValue({
+      isFavourite: mockIsFavourite,
+      toggleFavourite: mockToggleFavourite,
     });
   });
 
@@ -156,46 +155,46 @@ describe("IndividualRepoScreen", () => {
     expect(getByText("123,456 stars")).toBeTruthy();
   });
 
-  it("should display filled heart icon when repository is favorited", () => {
-    mockIsFavorite.mockReturnValue(true);
+  it("should display filled heart icon when repository is favourited", () => {
+    mockIsFavourite.mockReturnValue(true);
     (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
       selectedRepository: mockRepository,
       setSelectedRepository: mockSetSelectedRepository,
     });
 
     const { getByTestId } = render(<IndividualRepoScreen />);
-    const favoriteButton = getByTestId("favorite-button");
+    const favouriteButton = getByTestId("favourite-button");
 
-    expect(favoriteButton).toBeTruthy();
-    expect(mockIsFavorite).toHaveBeenCalledWith(mockRepository.id);
+    expect(favouriteButton).toBeTruthy();
+    expect(mockIsFavourite).toHaveBeenCalledWith(mockRepository.id);
   });
 
-  it("should display empty heart icon when repository is not favorited", () => {
-    mockIsFavorite.mockReturnValue(false);
+  it("should display empty heart icon when repository is not favourited", () => {
+    mockIsFavourite.mockReturnValue(false);
     (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
       selectedRepository: mockRepository,
       setSelectedRepository: mockSetSelectedRepository,
     });
 
     const { getByTestId } = render(<IndividualRepoScreen />);
-    const favoriteButton = getByTestId("favorite-button");
+    const favouriteButton = getByTestId("favourite-button");
 
-    expect(favoriteButton).toBeTruthy();
-    expect(mockIsFavorite).toHaveBeenCalledWith(mockRepository.id);
+    expect(favouriteButton).toBeTruthy();
+    expect(mockIsFavourite).toHaveBeenCalledWith(mockRepository.id);
   });
 
-  it("should toggle favorite when favorite button is pressed", () => {
-    mockIsFavorite.mockReturnValue(false);
+  it("should toggle favourite when favourite button is pressed", () => {
+    mockIsFavourite.mockReturnValue(false);
     (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
       selectedRepository: mockRepository,
       setSelectedRepository: mockSetSelectedRepository,
     });
 
     const { getByTestId } = render(<IndividualRepoScreen />);
-    const favoriteButton = getByTestId("favorite-button");
+    const favouriteButton = getByTestId("favourite-button");
 
-    fireEvent.press(favoriteButton);
+    fireEvent.press(favouriteButton);
 
-    expect(mockToggleFavorite).toHaveBeenCalledWith(mockRepository.id);
+    expect(mockToggleFavourite).toHaveBeenCalledWith(mockRepository.id);
   });
 });
