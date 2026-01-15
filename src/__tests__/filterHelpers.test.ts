@@ -2,7 +2,7 @@ import {
   toggleOrganization,
   extractUniqueOrganizations,
   filterRepositories,
-} from "./filterHelpers";
+} from "../lib/filterHelpers";
 import { Repository } from "../services/githubApi";
 
 describe("filterHelpers", () => {

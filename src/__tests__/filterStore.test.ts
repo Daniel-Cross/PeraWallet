@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react-native";
-import { useFilterStore } from "./filterStore";
+import { useFilterStore } from "../store/filterStore";
 
 describe("filterStore", () => {
   beforeEach(() => {
