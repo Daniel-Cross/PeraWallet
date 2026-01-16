@@ -61,7 +61,7 @@ describe("useGithubRepos", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data).toEqual(mockRepos);
+    expect(result.current.data?.pages).toEqual([mockRepos]);
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBeNull();
   });
@@ -96,7 +96,10 @@ describe("useGithubRepos", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(fetchGithubRepos).toHaveBeenCalledWith(customUsernames);
+    expect(fetchGithubRepos).toHaveBeenCalledWith({
+      usernames: customUsernames,
+      page: 1,
+    });
   });
 
   it("should use different query keys for different usernames", async () => {
@@ -116,7 +119,13 @@ describe("useGithubRepos", () => {
       expect(result2.current.isSuccess).toBe(true);
     });
 
-    expect(fetchGithubRepos).toHaveBeenCalledWith(["user1"]);
-    expect(fetchGithubRepos).toHaveBeenCalledWith(["user2"]);
+    expect(fetchGithubRepos).toHaveBeenCalledWith({
+      usernames: ["user1"],
+      page: 1,
+    });
+    expect(fetchGithubRepos).toHaveBeenCalledWith({
+      usernames: ["user2"],
+      page: 1,
+    });
   });
 });

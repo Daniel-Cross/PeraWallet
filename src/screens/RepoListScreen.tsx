@@ -1,4 +1,3 @@
-import { useMemo, useEffect, useRef } from "react";
 import {
   FlatList,
   Text,
@@ -6,13 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { useGithubRepos } from "../hooks/useGithubRepos";
+import { useRepositories } from "../hooks/useRepositories";
+import { useOrganizations } from "../hooks/useOrganizations";
+import { useFilteredRepositories } from "../hooks/useFilteredRepositories";
+import { usePagination } from "../hooks/usePagination";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SearchAndFilter from "../components/molecules/SearchAndFilter";
-import {
-  extractUniqueOrganizations,
-  filterRepositories,
-} from "../lib/filterHelpers";
 import { useFilterStore } from "../store/filterStore";
 import { useRepositoryStore } from "../store/repositoryStore";
 import { useFavouritesStore } from "../store/favouritesStore";
@@ -23,52 +21,40 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { MainStackParamList } from "../navigation/Routes";
-import { ROUTES } from "../types/constants";
+import { REQUEST_STATUS, ROUTES } from "../types/constants";
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 const RepoListScreen = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { data, isLoading, error } = useGithubRepos();
   const {
-    isModalVisible,
-    searchText,
-    selectedOrganizations,
-    setSelectedOrganizations,
-    minStars,
-  } = useFilterStore();
+    allRepos,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching,
+    status,
+  } = useRepositories();
+
+  const organizations = useOrganizations(allRepos);
+  const filteredData = useFilteredRepositories(allRepos);
+  const { handleLoadMore } = usePagination({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching,
+  });
+
+  const { isModalVisible } = useFilterStore();
   const { setSelectedRepository } = useRepositoryStore();
   const { isFavourite, toggleFavourite } = useFavouritesStore();
 
-  const organizations = useMemo(() => {
-    if (!data) return [];
-    return extractUniqueOrganizations(data);
-  }, [data]);
-
-  const hasInitializedOrgs = useRef(false);
-
-  useEffect(() => {
-    if (organizations.length > 0 && !hasInitializedOrgs.current) {
-      setSelectedOrganizations(organizations);
-      hasInitializedOrgs.current = true;
-    }
-  }, [organizations, setSelectedOrganizations]);
-
-  const filteredData = useMemo(() => {
-    if (!data) return [];
-    return filterRepositories(
-      data,
-      searchText,
-      selectedOrganizations,
-      minStars
-    );
-  }, [data, searchText, selectedOrganizations, minStars]);
-
-  if (isLoading) {
+  if (status === REQUEST_STATUS.PENDING) {
     return <Loading />;
   }
 
-  if (error) {
+  if (status === REQUEST_STATUS.ERROR) {
     return (
       <View style={styles.center}>
         <Text>Error: {error.message}</Text>
@@ -120,6 +106,15 @@ const RepoListScreen = () => {
         keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={<SearchAndFilter />}
         ListEmptyComponent={<ListEmpty />}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View style={styles.footer}>
+              <Loading />
+            </View>
+          ) : null
+        }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
       />
 
       {isModalVisible && <FilterModal organizations={organizations} />}
@@ -173,6 +168,10 @@ const styles = StyleSheet.create({
   stars: {
     fontSize: 16,
     marginTop: 4,
+  },
+  footer: {
+    padding: 16,
+    alignItems: "center",
   },
 });
 

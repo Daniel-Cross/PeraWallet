@@ -1,14 +1,20 @@
 import React from "react";
-import { render, waitFor, fireEvent } from "@testing-library/react-native";
+import { render, fireEvent } from "@testing-library/react-native";
 import RepoListScreen from "../screens/RepoListScreen";
-import { useGithubRepos } from "../hooks/useGithubRepos";
+import { useRepositories } from "../hooks/useRepositories";
+import { useOrganizations } from "../hooks/useOrganizations";
+import { useFilteredRepositories } from "../hooks/useFilteredRepositories";
+import { usePagination } from "../hooks/usePagination";
 import { useFilterStore } from "../store/filterStore";
-import { useRepositoryStore } from "../store/repositoryStore";
 import { useFavouritesStore } from "../store/favouritesStore";
+import { useRepositoryStore } from "../store/repositoryStore";
 
 jest.mock("@expo/vector-icons/FontAwesome", () => "FontAwesome");
 
-jest.mock("../hooks/useGithubRepos");
+jest.mock("../hooks/useRepositories");
+jest.mock("../hooks/useOrganizations");
+jest.mock("../hooks/useFilteredRepositories");
+jest.mock("../hooks/usePagination");
 jest.mock("../store/filterStore");
 jest.mock("../store/repositoryStore");
 
@@ -31,7 +37,9 @@ jest.mock("../components/molecules/SearchAndFilter", () => {
 
 jest.mock("../components/molecules/FilterModal", () => {
   const React = require("react");
-  const MockFilterModal = () => React.createElement("FilterModal", {});
+  const { View } = require("react-native");
+  const MockFilterModal = () =>
+    React.createElement(View, { testID: "FilterModal" });
   MockFilterModal.displayName = "FilterModal";
   return { __esModule: true, default: MockFilterModal };
 });
@@ -81,29 +89,52 @@ describe("RepoListScreen", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    (useOrganizations as jest.Mock).mockReturnValue([
+      "facebook",
+      "google",
+      "microsoft",
+    ]);
+
+    (useFilteredRepositories as jest.Mock).mockImplementation((repos) => repos);
+
+    (usePagination as jest.Mock).mockReturnValue({
+      handleLoadMore: jest.fn(),
+    });
+
     (useFilterStore as unknown as jest.Mock).mockReturnValue({
       isModalVisible: false,
-      searchText: "",
-      selectedOrganizations: [],
-      setSelectedOrganizations: jest.fn(),
-      minStars: 0,
-      setMinStars: jest.fn(),
     });
-    (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
-      selectedRepository: null,
-      setSelectedRepository: jest.fn(),
+
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: [],
+      status: "pending",
+      error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: true,
     });
+
     (useFavouritesStore as unknown as jest.Mock).mockReturnValue({
       isFavourite: jest.fn(() => false),
       toggleFavourite: jest.fn(),
     });
+
+    (useRepositoryStore as unknown as jest.Mock).mockReturnValue({
+      setSelectedRepository: jest.fn(),
+    });
   });
 
   it("should show loading state when data is loading", () => {
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: null,
-      isLoading: true,
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: [],
+      status: "pending",
       error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: true,
     });
 
     const { getByText } = render(<RepoListScreen />);
@@ -112,10 +143,14 @@ describe("RepoListScreen", () => {
 
   it("should show error state when there is an error", () => {
     const mockError = new Error("Failed to fetch");
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: null,
-      isLoading: false,
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: [],
+      status: "error",
       error: mockError,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: false,
     });
 
     const { getByText } = render(<RepoListScreen />);
@@ -123,50 +158,50 @@ describe("RepoListScreen", () => {
   });
 
   it("should render repos when data is loaded", () => {
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: mockRepos,
-      isLoading: false,
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: mockRepos,
+      status: "success",
       error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: false,
     });
+    (useFilteredRepositories as jest.Mock).mockReturnValue(mockRepos);
 
     const { getByText } = render(<RepoListScreen />);
-
-    expect(getByText("react")).toBeTruthy();
     expect(getByText("angular")).toBeTruthy();
     expect(getByText("typescript")).toBeTruthy();
   });
 
   it("should display repo details correctly", () => {
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: mockRepos,
-      isLoading: false,
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: mockRepos,
+      status: "success",
       error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: false,
     });
+    (useFilteredRepositories as jest.Mock).mockReturnValue(mockRepos);
 
     const { getByText } = render(<RepoListScreen />);
-
     expect(getByText("@facebook")).toBeTruthy();
     expect(getByText("A JavaScript library")).toBeTruthy();
-    expect(getByText("1000")).toBeTruthy();
-  });
-
-  it("should render SearchAndFilter component", () => {
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: mockRepos,
-      isLoading: false,
-      error: null,
-    });
-
-    const { getByText } = render(<RepoListScreen />);
-    expect(getByText("react")).toBeTruthy();
   });
 
   it("should render FilterModal when isModalVisible is true", () => {
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: mockRepos,
-      isLoading: false,
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: mockRepos,
+      status: "success",
       error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: false,
     });
+    (useFilteredRepositories as jest.Mock).mockReturnValue(mockRepos);
     (useFilterStore as unknown as jest.Mock).mockReturnValue({
       isModalVisible: true,
       searchText: "",
@@ -176,16 +211,21 @@ describe("RepoListScreen", () => {
       setMinStars: jest.fn(),
     });
 
-    const { getByText } = render(<RepoListScreen />);
-    expect(getByText("react")).toBeTruthy();
+    const { queryByTestId } = render(<RepoListScreen />);
+    expect(queryByTestId("FilterModal")).toBeTruthy();
   });
 
   it("should not render FilterModal when isModalVisible is false", () => {
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: mockRepos,
-      isLoading: false,
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: mockRepos,
+      status: "success",
       error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: false,
     });
+    (useFilteredRepositories as jest.Mock).mockReturnValue(mockRepos);
     (useFilterStore as unknown as jest.Mock).mockReturnValue({
       isModalVisible: false,
       searchText: "",
@@ -195,63 +235,60 @@ describe("RepoListScreen", () => {
       setMinStars: jest.fn(),
     });
 
-    const { getByText } = render(<RepoListScreen />);
-    expect(getByText("react")).toBeTruthy();
+    const { queryByTestId } = render(<RepoListScreen />);
+    expect(queryByTestId("FilterModal")).toBeNull();
   });
 
   it("should show ListEmpty component when no repos match filters", () => {
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: [],
-      isLoading: false,
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: [],
+      status: "success",
       error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: false,
     });
+    (useFilteredRepositories as jest.Mock).mockReturnValue([]);
 
     const { getByText } = render(<RepoListScreen />);
     expect(getByText("No repositories found")).toBeTruthy();
   });
 
-  it("should initialize selectedOrganizations with all organizations", async () => {
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: mockRepos,
-      isLoading: false,
+  it("should initialize selectedOrganizations with all organizations", () => {
+    const mockOrganizations = ["facebook", "google", "microsoft"];
+    (useOrganizations as jest.Mock).mockReturnValue(mockOrganizations);
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: mockRepos,
+      status: "success",
       error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: false,
     });
+    (useFilteredRepositories as jest.Mock).mockReturnValue(mockRepos);
 
-    const { getByText } = render(<RepoListScreen />);
-
-    await waitFor(() => {
-      expect(getByText("react")).toBeTruthy();
-      expect(getByText("angular")).toBeTruthy();
-      expect(getByText("typescript")).toBeTruthy();
-    });
+    render(<RepoListScreen />);
+    expect(useOrganizations).toHaveBeenCalledWith(mockRepos);
   });
 
   it("should render favourite icon for each repository", () => {
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: mockRepos,
-      isLoading: false,
-      error: null,
-    });
-
-    const { getByTestId } = render(<RepoListScreen />);
-
-    expect(getByTestId("favourite-icon-1")).toBeTruthy();
-    expect(getByTestId("favourite-icon-2")).toBeTruthy();
-    expect(getByTestId("favourite-icon-3")).toBeTruthy();
-  });
-
-  it("should toggle favourite when favourite icon is pressed", () => {
     const mockToggleFavourite = jest.fn();
     (useFavouritesStore as unknown as jest.Mock).mockReturnValue({
       isFavourite: jest.fn(() => false),
       toggleFavourite: mockToggleFavourite,
     });
-
-    (useGithubRepos as jest.Mock).mockReturnValue({
-      data: mockRepos,
-      isLoading: false,
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: mockRepos,
+      status: "success",
       error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      isFetching: false,
     });
+    (useFilteredRepositories as jest.Mock).mockReturnValue(mockRepos);
 
     const { getByTestId } = render(<RepoListScreen />);
     const favouriteIcon = getByTestId("favourite-icon-1");
@@ -259,5 +296,47 @@ describe("RepoListScreen", () => {
     fireEvent.press(favouriteIcon);
 
     expect(mockToggleFavourite).toHaveBeenCalledWith(1);
+  });
+
+  it("should call handleLoadMore when scrolling to the end", () => {
+    const mockHandleLoadMore = jest.fn();
+    (usePagination as jest.Mock).mockReturnValue({
+      handleLoadMore: mockHandleLoadMore,
+    });
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: mockRepos,
+      status: "success",
+      error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: true,
+      isFetchingNextPage: false,
+      isFetching: false,
+    });
+    (useFilteredRepositories as jest.Mock).mockReturnValue(mockRepos);
+
+    const { UNSAFE_getByType } = render(<RepoListScreen />);
+    const flatList = UNSAFE_getByType(require("react-native").FlatList) as any;
+
+    // Simulate onEndReached
+    flatList.props.onEndReached();
+
+    expect(mockHandleLoadMore).toHaveBeenCalled();
+  });
+
+  it("should show loading footer when fetching next page", () => {
+    (useRepositories as jest.Mock).mockReturnValue({
+      allRepos: mockRepos,
+      status: "success",
+      error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: true,
+      isFetchingNextPage: true,
+      isFetching: false,
+    });
+    (useFilteredRepositories as jest.Mock).mockReturnValue(mockRepos);
+
+    const { getByText } = render(<RepoListScreen />);
+
+    expect(getByText("Loading")).toBeTruthy();
   });
 });

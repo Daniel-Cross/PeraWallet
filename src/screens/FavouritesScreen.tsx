@@ -27,7 +27,8 @@ const FavouritesScreen = () => {
 
   const favouriteRepos = useMemo(() => {
     if (!data) return [];
-    return data.filter((repo) => favouriteIds.includes(repo.id));
+    const allRepos = data.pages.flatMap((page) => page);
+    return allRepos.filter((repo) => favouriteIds.includes(repo.id));
   }, [data, favouriteIds]);
 
   if (isLoading) {

@@ -36,17 +36,17 @@ describe("githubApi", () => {
           json: async () => [],
         });
 
-      const result = await fetchGithubRepos();
+      const result = await fetchGithubRepos({});
 
       expect(global.fetch).toHaveBeenCalledTimes(3);
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.github.com/users/algorandfoundation/repos"
+        "https://api.github.com/users/algorandfoundation/repos?page=1&per_page=30&sort=updated"
       );
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.github.com/users/algorand/repos"
+        "https://api.github.com/users/algorand/repos?page=1&per_page=30&sort=updated"
       );
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.github.com/users/perawallet/repos"
+        "https://api.github.com/users/perawallet/repos?page=1&per_page=30&sort=updated"
       );
       expect(result).toHaveLength(2);
       expect(result[0].name).toBe("repo1");
@@ -63,11 +63,11 @@ describe("githubApi", () => {
         json: async () => mockRepos,
       });
 
-      const result = await fetchGithubRepos(["facebook"]);
+      const result = await fetchGithubRepos({ usernames: ["facebook"] });
 
       expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(global.fetch).toHaveBeenCalledWith(
-        "https://api.github.com/users/facebook/repos"
+        "https://api.github.com/users/facebook/repos?page=1&per_page=30&sort=updated"
       );
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe("custom-repo");
@@ -78,7 +78,7 @@ describe("githubApi", () => {
         ok: false,
       });
 
-      const result = await fetchGithubRepos(["nonexistent"]);
+      const result = await fetchGithubRepos({ usernames: ["nonexistent"] });
 
       expect(result).toEqual([]);
     });
@@ -97,7 +97,7 @@ describe("githubApi", () => {
           json: async () => [{ id: 3, name: "repo3" }],
         });
 
-      const result = await fetchGithubRepos(["user1", "user2"]);
+      const result = await fetchGithubRepos({ usernames: ["user1", "user2"] });
 
       expect(result).toHaveLength(3);
       expect(result.map((r) => r.name)).toEqual(["repo1", "repo2", "repo3"]);
@@ -117,7 +117,9 @@ describe("githubApi", () => {
           json: async () => [{ id: 2, name: "repo2" }],
         });
 
-      const result = await fetchGithubRepos(["user1", "user2", "user3"]);
+      const result = await fetchGithubRepos({
+        usernames: ["user1", "user2", "user3"],
+      });
 
       expect(result).toHaveLength(2);
       expect(result.map((r) => r.name)).toEqual(["repo1", "repo2"]);
@@ -128,8 +130,28 @@ describe("githubApi", () => {
         new Error("Network error")
       );
 
-      await expect(fetchGithubRepos(["user1"])).rejects.toThrow(
-        "Network error"
+      const result = await fetchGithubRepos({ usernames: ["user1"] });
+      expect(result).toEqual([]);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error fetching repos for user1:",
+        expect.any(Error)
+      );
+    });
+
+    it("should use custom page and perPage parameters", async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ id: 1, name: "repo1" }],
+      });
+
+      await fetchGithubRepos({
+        usernames: ["user1"],
+        page: 2,
+        perPage: 50,
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "https://api.github.com/users/user1/repos?page=2&per_page=50&sort=updated"
       );
     });
   });
